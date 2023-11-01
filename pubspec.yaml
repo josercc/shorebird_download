@@ -16,7 +16,8 @@ dependencies:
   path_provider: ^2.1.1
   yaml: ^3.1.2
   package_info_plus: ^4.2.0
-
+  args: ^2.4.2
+  dart_appwrite: ^10.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

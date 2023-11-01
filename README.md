@@ -47,3 +47,37 @@ final downloader =
     ShorebirdCustomUrlDownloader(appid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx');
 await downloader.downloadPatch((size,totol) => print("$size/$totol"));
 ```
+
+## uploader
+
+We now support uploading to the Appwrite server
+
+### install uploader
+
+```
+dart pub global activate shorebird_downloader
+```
+
+### uploader to appwrite server
+
+The first step is to configure your factory files
+
+```yaml
+# pubspec.yaml
+appwrite:
+  key: xxxxxx
+  projectId: xxxxx
+  bucketId: xxxx
+```
+
+```yaml
+# shorebird.yaml
+app_id: xxxxx
+```
+
+You can use the following command to upload the latest patch to Appwrite.
+
+```shell
+# in current shorebird project
+shorebird_patch_uploader appwrite --platform [ios/android] 
+```
