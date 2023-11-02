@@ -69,12 +69,11 @@ abstract class ShorebirdDownloader {
 
   Future<Patch?> requestPatchInfo();
 
-  Future downloadPatch([ProgressCallback? progressCallback]) async {
-    final patch = await requestPatchInfo();
-    if (patch == null) {
-      return;
-    }
-    final downloadPatchFilePath = await downloadPath(patch.number);
+  Future downloadPatchIncache(
+    Patch patch,
+    String downloadPatchFilePath, [
+    ProgressCallback? progressCallback,
+  ]) async {
     await Dio().downloadUri(
       Uri.parse(patch.downloadUrl),
       downloadPatchFilePath,
@@ -83,6 +82,15 @@ abstract class ShorebirdDownloader {
         debugPrint('shorebird download: $count/$total');
       },
     );
+  }
+
+  Future downloadPatch([ProgressCallback? progressCallback]) async {
+    final patch = await requestPatchInfo();
+    if (patch == null) {
+      return;
+    }
+    final downloadPatchFilePath = await downloadPath(patch.number);
+    await downloadPatchIncache(patch, downloadPatchFilePath, progressCallback);
     final patchFile = File(downloadPatchFilePath);
     final patchCacheFile = File(await patchCachePath(patch.number));
     if (!await patchCacheFile.exists()) {

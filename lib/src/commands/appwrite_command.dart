@@ -10,10 +10,6 @@ import 'package:yaml/yaml.dart';
 
 class AppwriteCommand extends BaseCommand {
   AppwriteCommand() {
-    argParser.addOption(
-      'host',
-      help: 'appwrite host default $defaultEndPoint',
-    );
     argParser.addOption('platform', help: '平台 ios/android', mandatory: true);
   }
 
@@ -27,34 +23,30 @@ class AppwriteCommand extends BaseCommand {
 
   @override
   FutureOr? run() async {
-    final host = argResults?['host'] ?? defaultEndPoint;
     final root = argResults?['root'] ?? Platform.environment['PWD']!;
     final platform = argResults?['platform']!;
     final shorebirdFile = File(join(root, 'shorebird.yaml'));
     if (!await shorebirdFile.exists()) {
       stderr.writeln('路径$root下找不到 shorebird.yaml 文件');
-      exit(1);
+      exitCode = 2;
     }
     final pubspecFile = File(join(root, 'pubspec.yaml'));
     if (!await pubspecFile.exists()) {
       stderr.writeln('路径$root下找不到 pubspec.yaml 文件');
-      exit(1);
+      exitCode = 2;
     }
     String appid = await shorebirdFile
         .readAsString()
         .then((value) => loadYaml(value)['app_id']);
-    String version = await pubspecFile
-        .readAsString()
-        .then((value) => loadYaml(value)['version']);
-    final key = await pubspecFile
-        .readAsString()
-        .then((value) => loadYaml(value)['appwrite']['key']);
-    final bucketId = await pubspecFile
-        .readAsString()
-        .then((value) => loadYaml(value)['appwrite']['bucketId']);
-    final projectId = await pubspecFile
-        .readAsString()
-        .then((value) => loadYaml(value)['appwrite']['projectId']);
+
+    final pubspecYaml =
+        await pubspecFile.readAsString().then((value) => loadYaml(value));
+    String version = pubspecYaml['version'];
+    final appwrite = pubspecYaml['appwrite'];
+    final key = appwrite['key'];
+    final bucketId = appwrite['bucketId'];
+    final projectId = appwrite['projectId'];
+    final host = appwrite['host'] ?? defaultEndPoint;
     final data = await CheckPatch(
       releaseVersion: version,
       appid: appid,
@@ -68,7 +60,7 @@ class AppwriteCommand extends BaseCommand {
       ..setEndpoint(host)
       ..setProject(projectId)
       ..setKey(key);
-    final fileName = '${platform}_${version}_$number.vmcode';
+    final fileName = '${platform}_${version}_${number}_.vmcode';
     final downloadCachePath = join(
       Platform.environment['HOME']!,
       'shorebird_download_cache',
@@ -82,14 +74,14 @@ class AppwriteCommand extends BaseCommand {
         .then((value) => value.map((e) => e.name).toList());
 
     if (list.contains(fileName)) {
-      print('🔴补丁文件已存在!');
+      stderr.writeln('🔴补丁文件已存在!');
       exit(1);
     }
     await Dio().downloadUri(
       Uri.parse(downloadUrl),
       downloadCachePath,
       onReceiveProgress: (count, total) {
-        print('➡️下载到本地缓存进度 $count / $total');
+        stdout.writeln('👎下载补丁到本地缓存进度 $count / $total');
       },
     );
 
@@ -99,10 +91,11 @@ class AppwriteCommand extends BaseCommand {
       fileId: fileId,
       file: InputFile.fromPath(path: downloadCachePath, filename: fileName),
       onProgress: (p0) {
-        print('➡️上传到 Appwrite 进度 ${p0.progress.toStringAsFixed(2)}%');
+        stdout
+            .writeln('👍上传补丁到 Appwrite 进度 ${p0.progress.toStringAsFixed(2)}%');
       },
     );
-    print('✅上传成功! 文件id:${file.$id}  文件名:$fileName');
-    exit(0);
+    stdout.writeln('✅上传成功! 文件id:${file.$id}  文件名:$fileName');
+    exitCode = 0;
   }
 }

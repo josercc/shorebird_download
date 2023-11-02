@@ -1,3 +1,11 @@
+## 0.3.1
+
+- fix changelog and readme doc error
+
+## 0.3.0
+
+- support request new patch version download from appwrite server
+
 ## 0.2.0
 
 - support upload patch in appwrite server

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 
@@ -52,15 +52,15 @@ class CheckPatch {
       'patch_number': currentPatchNumber
     });
 
-    print('post data: $data');
+    log('post data: $data');
 
     final response = await dio.request(
       url,
       onSendProgress: (count, total) {
-        print('shorebird send $count/$total [$url]');
+        log('shorebird send $count/$total [$url]');
       },
       onReceiveProgress: (count, total) {
-        print('shorebird receive $count/$total [$url]');
+        log('shorebird receive $count/$total [$url]');
       },
       data: data,
     );
@@ -74,7 +74,7 @@ class CheckPatch {
     //         "15aedb4049ba463f5a03db6094da3b166ebfc5e837739e225bc43265e14f8688"
     //   }
     // });
-    print('shorebird response: \n${json.encode(response.data)}');
+    log('shorebird response: \n${json.encode(response.data)}');
     return response.data;
   }
 }

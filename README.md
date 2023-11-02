@@ -81,3 +81,17 @@ You can use the following command to upload the latest patch to Appwrite.
 # in current shorebird project
 shorebird_patch_uploader appwrite --platform [ios/android] 
 ```
+
+To download updates directly from appwrite, you need to use the following code
+
+```dart
+final downloader =
+    ShorebirdAppwriteDownloader(
+      appid: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
+      projectId: 'xxxxx',
+      bucketId: 'bucketId',
+      key: 'key',
+      // endPoint: 'custom appwrite endpoint normal is https://cloud.appwrite.io/v1'
+    );
+await downloader.downloadPatch((size,totol) => print("$size/$totol"));
+```
