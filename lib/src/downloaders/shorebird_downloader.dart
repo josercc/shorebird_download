@@ -3,10 +3,10 @@ import 'dart:io';
 
 import 'package:darty_json_safe/darty_json_safe.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shorebird_downloader/src/common/define.dart';
 import 'package:shorebird_downloader/src/downloaders/patch.dart';
 
 abstract class ShorebirdDownloader {
@@ -17,7 +17,7 @@ abstract class ShorebirdDownloader {
   Future<String> get shorebirdPath async {
     if (Platform.isAndroid) {
       return getApplicationDocumentsDirectory().then(
-        (value) => join(dirname(value.path), 'code_cache', 'shorebird_updater'),
+        (value) => join(dirname(value.path), 'files', 'shorebird_updater'),
       );
     } else if (Platform.isIOS) {
       return getApplicationSupportDirectory().then(
@@ -79,7 +79,7 @@ abstract class ShorebirdDownloader {
       downloadPatchFilePath,
       onReceiveProgress: (count, total) {
         progressCallback?.call(count, total);
-        debugPrint('shorebird download: $count/$total');
+        logger.i('shorebird download: $count/$total');
       },
     );
   }
@@ -96,7 +96,7 @@ abstract class ShorebirdDownloader {
     if (!await patchCacheFile.exists()) {
       await patchCacheFile.create(recursive: true);
     }
-    debugPrint('copy ${patchFile.path} to ${patchCacheFile.path}');
+    logger.i('copy ${patchFile.path} to ${patchCacheFile.path}');
     await patchFile.copy(patchCacheFile.path);
     final lastPatchNumber = await currentPatchNumber();
     final lastPatchFile =
@@ -121,13 +121,23 @@ abstract class ShorebirdDownloader {
     };
     final patchStateFile = File(await patchStateFilePath);
     await patchStateFile.create(recursive: true);
-    debugPrint('write patch state file');
+    logger.i('write patch state file');
     await patchStateFile.writeAsString(json.encode(patchState));
-    debugPrint('✅下载补丁${patch.number}完成!');
+    logger.i('✅下载补丁${patch.number}完成!');
   }
 
   Future<String> get releaseVersion async {
     final info = await PackageInfo.fromPlatform();
     return '${info.version}+${info.buildNumber}';
+  }
+
+  String get platform {
+    if (Platform.isAndroid) {
+      return 'android';
+    } else if (Platform.isIOS) {
+      return 'ios';
+    } else {
+      throw UnsupportedError('暂时不支持此平台!');
+    }
   }
 }

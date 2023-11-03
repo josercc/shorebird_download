@@ -18,6 +18,7 @@ dependencies:
   package_info_plus: ^4.2.0
   args: ^2.4.2
   dart_appwrite: ^10.0.0
+  logger: ^2.0.2+1
 dev_dependencies:
   flutter_test:
     sdk: flutter
