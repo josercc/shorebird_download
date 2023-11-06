@@ -4,6 +4,9 @@ This is a plug-in that supports `Shorebird` to customize the patch download addr
 
 Of course, in addition to the download function, you still need to get the other patch status related to Shorebird through the `shorebird_code_push` plugin.
 
+⚠️ At present, an error will be reported when downloading the Android patch through this library and starting it. -> https://github.com/shorebirdtech/shorebird/issues/1449
+
+
 ## How To install
 
 ```shell
@@ -11,6 +14,20 @@ flutter pub add shorebird_downloader
 ```
 
 ## How to use
+
+**Now you can use the following methods to detect patches, download, pop-up prompts to restart, etc.**
+
+
+```dart
+ShorebirdCheckDownloader(
+  customShowUpdateDialog: (currentPatchNumber, nextPatchNumber) =>
+      ShorebirdCheckDownloader.showUpdateDialog(
+    Get.context!,
+    currentPatchNumber,
+    nextPatchNumber,
+  ),
+).checkPatch();
+```
 
 ```dart
 final downloader =

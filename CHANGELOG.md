@@ -1,3 +1,11 @@
+## 0.5.0
+
+- Add `ShorebirdCheckDownloader` class o detect patches, download, pop-up prompts to restart, etc.
+
+## 0.4.0
+
+- Added support for initializing Appwrite services and supporting patches for multiple projects in Appwrite
+
 ## 0.3.1
 
 - fix changelog and readme doc error
