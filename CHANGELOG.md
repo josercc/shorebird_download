@@ -1,3 +1,7 @@
+## 0.6.0
+
+- Improved experience for ShorebirdCheckDownloader download, support Android custom patch download
+
 ## 0.5.0
 
 - Add `ShorebirdCheckDownloader` class o detect patches, download, pop-up prompts to restart, etc.
