@@ -20,6 +20,9 @@ dependencies:
   dart_appwrite: ^10.0.0
   logger: ^2.0.2+1
   shorebird_code_push: ^1.1.3
+  pubspec_manager: ^1.0.0-alpha.11
+  process_run: ^0.13.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

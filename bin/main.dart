@@ -1,5 +1,5 @@
 import 'package:args/command_runner.dart';
-import 'package:shorebird_downloader/src/commands/appwrite_command.dart';
+import 'package:shorebird_downloader/src/commands/appwrite/appwrite_command.dart';
 
 Future<void> main(List<String> args) async {
   final commandRunner = CommandRunner(

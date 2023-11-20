@@ -1,21 +1,24 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:shorebird_downloader/shorebird_downloader.dart';
 
 class CheckPatch {
   final String releaseVersion;
   final String appid;
   final int currentPatchNumber;
   final String platform;
+  // default is aarch64
+  final String arch;
 
   CheckPatch({
     required this.releaseVersion,
     required this.appid,
     required this.currentPatchNumber,
     required this.platform,
+    this.arch = 'aarch64',
   });
-  Future<dynamic> checkPatch() async {
+  Future<PatchResponse> checkPatch() async {
     //     curl -X "POST" "https://api.shorebird.dev/api/v1/patches/check" \
 //      -H 'Content-Type: application/json; charset=utf-8' \
 //      -d $'{
@@ -45,22 +48,22 @@ class CheckPatch {
     // }
     final data = json.encode({
       'platform': platform,
-      'arch': 'aarch64',
+      'arch': arch,
       'release_version': releaseVersion,
       'app_id': appid,
       'channel': 'stable',
       'patch_number': currentPatchNumber
     });
 
-    log('post data: $data');
+    logger.i('post data: $data');
 
     final response = await dio.request(
       url,
       onSendProgress: (count, total) {
-        log('shorebird send $count/$total [$url]');
+        logger.i('shorebird send $count/$total [$url]');
       },
       onReceiveProgress: (count, total) {
-        log('shorebird receive $count/$total [$url]');
+        logger.i('shorebird receive $count/$total [$url]');
       },
       data: data,
     );
@@ -74,7 +77,7 @@ class CheckPatch {
     //         "15aedb4049ba463f5a03db6094da3b166ebfc5e837739e225bc43265e14f8688"
     //   }
     // });
-    log('shorebird response: \n${json.encode(response.data)}');
-    return response.data;
+    logger.i('shorebird response: \n${json.encode(response.data)}');
+    return PatchResponse.fromJson(response.data);
   }
 }

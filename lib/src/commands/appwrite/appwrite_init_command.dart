@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dart_appwrite/dart_appwrite.dart' as appwrite;
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:darty_json_safe/darty_json_safe.dart';
-import 'package:shorebird_downloader/src/commands/appwrite_base_command.dart';
+import 'package:shorebird_downloader/src/commands/appwrite/appwrite_base_command.dart';
 import 'package:shorebird_downloader/src/patch_type.dart';
 
 class AppwriteInitCommand extends AppwriteBaseCommand {

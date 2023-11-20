@@ -1,6 +1,5 @@
+import 'dart:async';
 import 'dart:io';
-
-import 'package:flutter/material.dart';
 import 'package:shorebird_code_push/shorebird_code_push.dart';
 import 'package:shorebird_downloader/shorebird_downloader.dart';
 
@@ -13,16 +12,28 @@ class ShorebirdCheckDownloader {
   final ShorebirdDownloader? downloader;
 
   /// 下载的回调 官方目前不支持
-  final void Function(int count, int total)? onDownloadProgress;
+  /// [count] 当前下载的大小
+  /// [total] 总大小
+  final void Function(int count, int? total)? onDownloadProgress;
 
-  /// 自定义弹出更新  Dialog
-  final void Function(int currentPatchNumber, int nextPatchNumber)?
-      customShowUpdateDialog;
+  /// 开始下载的回调
+  final void Function()? onDownloadStart;
+
+  /// 下载完成的回调
+  final void Function()? onDownloadComplete;
+
+  /// 是否允许下载补丁
+  /// [currentPatchNumber] 当前补丁
+  /// [nextPatchNumber] 下一个补丁
+  final Future<bool> Function(int currentPatchNumber, int nextPatchNumber)?
+      allowDownloadPatchHandle;
 
   ShorebirdCheckDownloader({
     this.downloader,
     this.onDownloadProgress,
-    this.customShowUpdateDialog,
+    this.onDownloadStart,
+    this.onDownloadComplete,
+    this.allowDownloadPatchHandle,
   });
 
   /// 当前是否正在下载补丁
@@ -31,11 +42,11 @@ class ShorebirdCheckDownloader {
   /// 检查补丁
   /// [needSleep] 是否需要等待 默认为 false
   /// [duration] 等待的时间 默认为一分钟
-  Future<void> checkPatch([bool needSleep = false, Duration? duration]) async {
+  Future<void> checkPatch({bool needSleep = false, Duration? duration}) async {
     if (needSleep) {
       final delayed = duration ?? const Duration(minutes: 1);
       logger.i('正在等待 ${delayed.inMilliseconds}毫秒, 等待下一次轮训!');
-      await Future.delayed(duration ?? const Duration(minutes: 1));
+      await Future.delayed(delayed);
     }
     final isShorebirdAvailable = codePush.isShorebirdAvailable();
     final isNewPatchAvailableForDownload =
@@ -76,71 +87,72 @@ isNewPatchReadyToInstall: $isNewPatchReadyToInstall
     Duration? duration,
   }) async {
     if (!isShorebirdAvailable) {
+      /// Shorebird 服务没有激活
       return;
     } else if (isNewPatchReadyToInstall &&
         (Platform.isAndroid || Platform.isIOS)) {
+      /// 补丁已经安装完毕 等待重启
       isDowningPatch = false;
-      if (customShowUpdateDialog != null) {
-        customShowUpdateDialog!(currentPatchNumber, nextPatchNumber);
-      }
+      onDownloadComplete?.call();
     } else if (!isNewPatchAvailableForDownload) {
-      await checkPatch(true, duration);
+      /// 没有新的补丁激活
+      await checkPatch(needSleep: true, duration: duration);
     } else if (!isDowningPatch) {
+      /// 当前没有在下载补丁 则开始下载补丁
       isDowningPatch = true;
-      await downloadUpdateIfAvailable(test);
-      await checkPatch(true, duration);
+
+      /// 是否允许下载
+      final allowDownloadPatch = await allowDownloadPatchHandle?.call(
+            currentPatchNumber,
+            nextPatchNumber,
+          ) ??
+          true;
+
+      if (!allowDownloadPatch) return;
+      onDownloadStart?.call();
+      await downloadUpdateIfAvailable(nextPatchNumber, test);
+      await checkPatch(needSleep: true, duration: duration);
     }
   }
 
   /// 下载更新如果有插件激活 如果有自定义下载器 则使用自定义下载器 【不要自己调用】
-  Future downloadUpdateIfAvailable([bool test = false]) async {
+  Future downloadUpdateIfAvailable(int nextPatchNumber,
+      [bool test = false]) async {
     if (!test) return;
     if (downloader != null) {
-      await downloader!.downloadPatch(onDownloadProgress);
+      await downloader!.downloadPatch(progressCallback: onDownloadProgress);
     } else {
+      /// 如果是官网就用过定时任务检测下载文件的大小
+      Timer.periodic(const Duration(milliseconds: 500), (timer) async {
+        if (await codePush.isNewPatchReadyToInstall()) {
+          timer.cancel();
+        } else {
+          final size = await readDownloadPatchSize(nextPatchNumber);
+          onDownloadProgress?.call(size, null);
+        }
+      });
       await codePush.downloadUpdateIfAvailable();
     }
     logger.i('下载补丁完毕');
   }
 
-  /// 展示更新弹框
-  static showUpdateDialog(
-      BuildContext context, int currentPatchNumber, int nextPatchNumber) {
-    showDialog(
-        context: context,
-        builder: (context) => Dialog(
-              child: Container(
-                padding: const EdgeInsets.all(10.0),
-                constraints:
-                    const BoxConstraints(minHeight: 150, minWidth: 300),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '有新的补丁$currentPatchNumber,需要更新!',
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => restartApp(),
-                        child: const Text('立即重启'),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
-            ));
-  }
-
   /// 重启 App
   static restartApp() {
     exit(0);
+  }
+
+  /// 读取已经下载文件的大小
+  Future<int> readDownloadPatchSize(int nextPatchNumber) async {
+    final downloadPatchFile = File(await downloadPath(nextPatchNumber));
+    if (await downloadPatchFile.exists()) {
+      return downloadPatchFile.length();
+    } else {
+      final patchFile = File(await patchCachePath(nextPatchNumber));
+      if (await patchFile.exists()) {
+        return patchFile.length();
+      } else {
+        return 0;
+      }
+    }
   }
 }

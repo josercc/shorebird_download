@@ -5,7 +5,7 @@ import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:darty_json_safe/darty_json_safe.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart';
-import 'package:shorebird_downloader/src/commands/appwrite_base_command.dart';
+import 'package:shorebird_downloader/src/commands/appwrite/appwrite_base_command.dart';
 import 'package:shorebird_downloader/src/downloaders/check_patch.dart';
 import 'package:shorebird_downloader/src/patch_type.dart';
 import 'package:yaml/yaml.dart';
@@ -53,6 +53,7 @@ class AppwriteUploadCommand extends AppwriteBaseCommand {
       appid: appid,
       currentPatchNumber: 0,
       platform: platform,
+      arch: platform == 'ios' ? 'aarch64' : 'arm',
     ).checkPatch();
     final patch = JSON(data)['patch'];
     final number = patch['number'].intValue;

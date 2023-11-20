@@ -5,7 +5,6 @@ import 'package:darty_json_safe/darty_json_safe.dart';
 import 'package:dio/dio.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shorebird_downloader/src/common/define.dart';
 import 'package:shorebird_downloader/src/downloaders/patch.dart';
 
@@ -14,39 +13,6 @@ abstract class ShorebirdDownloader {
 
   const ShorebirdDownloader({required this.appid});
 
-  Future<String> get shorebirdPath async {
-    if (Platform.isAndroid) {
-      return getApplicationDocumentsDirectory().then(
-        (value) => join(dirname(value.path), 'files', 'shorebird_updater'),
-      );
-    } else if (Platform.isIOS) {
-      return getApplicationSupportDirectory().then(
-        (e) => join(
-          e.path,
-          "shorebird",
-          'shorebird_updater',
-        ),
-      );
-    } else {
-      throw UnsupportedError('暂时不支持此平台!');
-    }
-  }
-
-  // downloads/$patchNumber
-  Future<String> downloadPath(int patchNumber) =>
-      shorebirdPath.then((e) => join(e, "downloads", patchNumber.toString()));
-
-  // patches/$patchNumber/dlc.vmcode
-  Future<String> patchCachePath(int patchNumber) => shorebirdPath
-      .then((e) => join(e, "patches", patchNumber.toString(), "dlc.vmcode"));
-
-  // state.json
-  Future<String> get stateFilePath =>
-      shorebirdPath.then((e) => join(e, "state.json"));
-
-  // patch_state.json
-  Future<String> get patchStateFilePath =>
-      shorebirdPath.then((e) => join(e, "patches_state.json"));
   Future<int> currentPatchNumber() async {
     final file = File(await patchStateFilePath);
     if (!await file.exists()) return 0;
@@ -71,11 +37,12 @@ abstract class ShorebirdDownloader {
 
   Future downloadPatchIncache(
     Patch patch,
-    String downloadPatchFilePath, [
+    String downloadPatchFilePath, {
     ProgressCallback? progressCallback,
-  ]) async {
+    String? downloadUrl,
+  }) async {
     await Dio().downloadUri(
-      Uri.parse(patch.downloadUrl),
+      Uri.parse(downloadUrl ?? patch.downloadUrl),
       downloadPatchFilePath,
       onReceiveProgress: (count, total) {
         progressCallback?.call(count, total);
@@ -84,13 +51,21 @@ abstract class ShorebirdDownloader {
     );
   }
 
-  Future downloadPatch([ProgressCallback? progressCallback]) async {
+  Future downloadPatch(
+      {ProgressCallback? progressCallback, String? downloadUrl}) async {
+    logger.i('[$runtimeType] start requestPatchInfo');
     final patch = await requestPatchInfo();
     if (patch == null) {
       return;
     }
     final downloadPatchFilePath = await downloadPath(patch.number);
-    await downloadPatchIncache(patch, downloadPatchFilePath, progressCallback);
+    logger.i('[$runtimeType] start download patch');
+    await downloadPatchIncache(
+      patch,
+      downloadPatchFilePath,
+      progressCallback: progressCallback,
+      downloadUrl: downloadUrl,
+    );
     final patchFile = File(downloadPatchFilePath);
     final patchCacheFile = File(await patchCachePath(patch.number));
     if (!await patchCacheFile.exists()) {
