@@ -1,3 +1,7 @@
+## 0.7.0
+
+- Adjusted the code to optimize the experience
+
 ## 0.6.0
 
 - Improved experience for ShorebirdCheckDownloader download, support Android custom patch download

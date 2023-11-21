@@ -59,12 +59,12 @@ class CheckPatch {
 
     final response = await dio.request(
       url,
-      onSendProgress: (count, total) {
-        logger.i('shorebird send $count/$total [$url]');
-      },
-      onReceiveProgress: (count, total) {
-        logger.i('shorebird receive $count/$total [$url]');
-      },
+      // onSendProgress: (count, total) {
+      //   logger.i('shorebird send $count/$total [$url]');
+      // },
+      // onReceiveProgress: (count, total) {
+      //   logger.i('shorebird receive $count/$total [$url]');
+      // },
       data: data,
     );
     // final response = Response(requestOptions: RequestOptions(), data: {

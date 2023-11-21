@@ -1,6 +1,6 @@
 name: shorebird_downloader
 description: 用于可以自定义 Shorebird  下载的库
-version: 0.6.0
+version: 0.7.0
 homepage: https://github.com/josercc/shorebird_downloader.git
 
 environment:
