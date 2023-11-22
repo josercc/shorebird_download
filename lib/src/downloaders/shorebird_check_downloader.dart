@@ -46,24 +46,18 @@ class ShorebirdCheckDownloader {
   bool isDowningPatch = false;
 
   /// 检查补丁
-  /// [needSleep] 是否需要等待 默认为 false
   /// [duration] 等待的时间 默认为一分钟
-  Future<void> checkPatch({bool needSleep = false, Duration? duration}) async {
+  Future<void> checkPatch({Duration? duration}) async {
     if (isChecking) {
       return;
     }
-    isChecking = true;
-    final result = await _checkPatch();
-    logger.d('👉检测补丁: $result');
-    if (result.$2) {
-      Timer.periodic(duration ?? const Duration(minutes: 1), (timer) async {
-        final result = await _checkPatch();
-        logger.d('👉检测补丁: $result');
-        if (!result.$2) {
-          timer.cancel();
-        }
-      });
-    }
+    Timer.periodic(duration ?? const Duration(minutes: 1), (timer) async {
+      final result = await _checkPatch();
+      logger.d('👉检测补丁: $result');
+      if (!result.$2) {
+        timer.cancel();
+      }
+    });
   }
 
   Future<(ShorebirdCodePushInfo, bool)> _checkPatch() async {
