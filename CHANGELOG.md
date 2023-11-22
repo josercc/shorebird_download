@@ -1,5 +1,10 @@
 ## 0.7.0
 
+- The settings check needs to wait for a while. This time is the time we set by default. If not, it will be one minute.
+
+
+## 0.7.0
+
 - Adjusted the code to optimize the experience
 
 ## 0.6.0
