@@ -12,7 +12,7 @@ abstract class AppwriteBaseCommand extends BaseCommand {
   final databaseId = 'shorebird_patchs';
   final collectionId = 'patches';
   @override
-  FutureOr? run() async {
+  Future<int> runCommand() async {
     final root = argResults?['root'] ?? Platform.environment['PWD']!;
 
     final pubspecFile = File(join(root, 'pubspec.yaml'));
@@ -40,5 +40,5 @@ abstract class AppwriteBaseCommand extends BaseCommand {
     return appwriteRun(client, bucketId);
   }
 
-  FutureOr? appwriteRun(Client client, String bucketId);
+  Future<int> appwriteRun(Client client, String bucketId);
 }

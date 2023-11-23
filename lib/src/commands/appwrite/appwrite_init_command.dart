@@ -15,7 +15,7 @@ class AppwriteInitCommand extends AppwriteBaseCommand {
   String get name => 'init';
 
   @override
-  FutureOr? appwriteRun(appwrite.Client client, String bucketId) async {
+  Future<int> appwriteRun(appwrite.Client client, String bucketId) async {
     final databases = appwrite.Databases(client);
 
     try {
@@ -119,6 +119,6 @@ class AppwriteInitCommand extends AppwriteBaseCommand {
     }
 
     stdout.writeln('✅初始化成功!');
-    exitCode = 0;
+    return 0;
   }
 }

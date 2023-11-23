@@ -27,19 +27,19 @@ class AppwriteUploadCommand extends AppwriteBaseCommand {
   }
 
   @override
-  FutureOr? appwriteRun(Client client, String bucketId) async {
+  Future<int> appwriteRun(Client client, String bucketId) async {
     final patchType = argResults?['patchType'] ?? PatchType.cannotSkip.name;
     final root = argResults?['root'] ?? Platform.environment['PWD']!;
     final platform = argResults?['platform']!;
     final shorebirdFile = File(join(root, 'shorebird.yaml'));
     if (!await shorebirdFile.exists()) {
       stderr.writeln('路径$root下找不到 shorebird.yaml 文件');
-      exitCode = 2;
+      return 2;
     }
     final pubspecFile = File(join(root, 'pubspec.yaml'));
     if (!await pubspecFile.exists()) {
       stderr.writeln('路径$root下找不到 pubspec.yaml 文件');
-      exitCode = 2;
+      return 2;
     }
     String appid = await shorebirdFile
         .readAsString()
@@ -73,7 +73,7 @@ class AppwriteUploadCommand extends AppwriteBaseCommand {
 
     if (list.contains(fileName)) {
       stderr.writeln('🔴补丁文件已存在!');
-      exit(1);
+      return 1;
     }
     await Dio().downloadUri(
       Uri.parse(downloadUrl),
@@ -108,6 +108,6 @@ class AppwriteUploadCommand extends AppwriteBaseCommand {
       },
     );
     stdout.writeln('✅上传成功! 文件id:${file.$id}  文件名:$fileName');
-    exitCode = 0;
+    return 0;
   }
 }
